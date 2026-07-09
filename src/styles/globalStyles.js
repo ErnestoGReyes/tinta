@@ -90,9 +90,9 @@ export function InjectStyles() {
     document.title = "Tinta";
 
     const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-      <rect width="32" height="32" rx="6" fill="#1C1712"/>
-      <path d="M20 6 L24 10 L12 22 L7 23 L8 18 Z" fill="#C0A060"/>
-      <circle cx="23.5" cy="9.5" r="1.6" fill="#D9B87E"/>
+      <rect width="32" height="32" rx="6" fill="#0B0E16"/>
+      <path d="M20 6 L24 10 L12 22 L7 23 L8 18 Z" fill="#5C7CFA"/>
+      <circle cx="23.5" cy="9.5" r="1.6" fill="#7C94FF"/>
     </svg>`;
     const faviconUrl = "data:image/svg+xml," + encodeURIComponent(faviconSvg);
     let link = document.querySelector("link[rel~='icon']");

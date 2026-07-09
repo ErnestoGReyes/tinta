@@ -76,6 +76,28 @@ export const VINTAGE_LIGHT = {
   textPrimary:"#241C12", textSec:"#4A3D2A", textMuted:"#7A6A4E", textFaint:"#B5A582",
   white:"#FAF3E3", shadow:"rgba(60,40,15,0.18)",
 };
+
+// ── AÑIL — identidad principal de Tinta: azul tinta sobre fondo con tinte de
+// color propio (nunca negro puro), para que se distinga de Plano incluso en
+// una miniatura chica, no solo en el nombre del acento.
+export const ANIL_DARK = {
+  bgApp:"#0B0E16", bgSidebar:"#070910", bgEditor:"#0D111C", bgPanel:"#0B0E16",
+  bgCard:"#161B2C", bgCardHover:"#1F2740", bgActive:"#283252",
+  border:"#2C3654", borderBright:"#3E4C78",
+  accent:"#5C7CFA", accentGlow:"rgba(92,124,250,0.14)", accentWarm:"#7C94FF",
+  green:"#5EA88A", purple:"#8C7CE0", yellow:"#C9B060", red:"#D6707A",
+  textPrimary:"#E4E6F0", textSec:"#9AA4C8", textMuted:"#6B7398", textFaint:"#3A4260",
+  white:"#F0F2FA", shadow:"rgba(4,6,14,0.88)",
+};
+export const ANIL_LIGHT = {
+  bgApp:"#EEF0F6", bgSidebar:"#E4E8F2", bgEditor:"#F7F8FC", bgPanel:"#E8ECF4",
+  bgCard:"#FAFBFE", bgCardHover:"#F2F4FA", bgActive:"#DCE2F0",
+  border:"#C6D0E6", borderBright:"#9CACD8",
+  accent:"#3C56C9", accentGlow:"rgba(60,86,201,0.10)", accentWarm:"#5468D4",
+  green:"#3C7A5C", purple:"#5C4CA0", yellow:"#8A7420", red:"#A03848",
+  textPrimary:"#12162A", textSec:"#3A4266", textMuted:"#6E7898", textFaint:"#B8C0DC",
+  white:"#FAFBFE", shadow:"rgba(20,26,50,0.14)",
+};
 export const NEON_DARK = {
   bgApp:"#08070C", bgSidebar:"#050509", bgEditor:"#0A0910", bgPanel:"#08070C",
   bgCard:"#17142A", bgCardHover:"#221E3C", bgActive:"#2E2850",
@@ -168,6 +190,7 @@ export const NORDIC_LIGHT = {
 };
 
 export const THEMES = {
+  anil:      { id:"anil",      label:"Añil",               swatch:ANIL_DARK.accent,      dark:ANIL_DARK,      light:ANIL_LIGHT },
   vintage:   { id:"vintage",   label:"Papel Envejecido",   swatch:VINTAGE_DARK.accent,   dark:VINTAGE_DARK,   light:VINTAGE_LIGHT },
   noir:      { id:"noir",      label:"Noir Clásico",       swatch:DARK.accent,           dark:DARK,           light:LIGHT },
   neon:      { id:"neon",      label:"Neo-Noir",           swatch:NEON_DARK.accent,      dark:NEON_DARK,      light:NEON_LIGHT },
@@ -176,7 +199,7 @@ export const THEMES = {
   western:   { id:"western",   label:"Desierto",           swatch:WESTERN_DARK.accent,   dark:WESTERN_DARK,   light:WESTERN_LIGHT },
   nordic:    { id:"nordic",    label:"Editorial Nórdico",  swatch:NORDIC_DARK.accent,    dark:NORDIC_DARK,    light:NORDIC_LIGHT },
 };
-export const DEFAULT_THEME_ID = "vintage";
+export const DEFAULT_THEME_ID = "anil";
 
 export function getThemeList() { return Object.values(THEMES); }
 export function getPalette(themeId, isDark) {

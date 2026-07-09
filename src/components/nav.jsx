@@ -13,14 +13,14 @@ export function TintaLogo({ size = 40 }) {
   const w = size * 1.3;
   return (
     <svg width={w} height={size} viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="52" height="40" rx="7" fill="#120E0A" stroke="#3A2E1E" strokeWidth="0.75"/>
-      <path d="M18 24 L34 10 L38 14 L22 28 Z" fill="#C0A060"/>
-      <path d="M15 28 L18 24 L22 28 L16 34 Z" fill="#8B6820"/>
-      <circle cx="36.5" cy="12.5" r="2.2" fill="#D9B87E">
+      <rect width="52" height="40" rx="7" fill="#0B0E16" stroke="#2C3654" strokeWidth="0.75"/>
+      <path d="M18 24 L34 10 L38 14 L22 28 Z" fill="#5C7CFA"/>
+      <path d="M15 28 L18 24 L22 28 L16 34 Z" fill="#3C56C9"/>
+      <circle cx="36.5" cy="12.5" r="2.2" fill="#7C94FF">
         <animate attributeName="opacity" values="1;0.35;1" dur="1.4s" repeatCount="indefinite"/>
       </circle>
       <text x="26" y="35" fontFamily="'Courier Prime','Courier New',monospace" fontSize="8.5" fontWeight="700"
-        fill="#E8E0D0" textAnchor="middle" letterSpacing="2.5">TINTA</text>
+        fill="#E4E6F0" textAnchor="middle" letterSpacing="2.5">TINTA</text>
     </svg>
   );
 }
