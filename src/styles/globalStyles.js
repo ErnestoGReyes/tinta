@@ -15,11 +15,11 @@ export function makeGlobalCss(C) { return `
       radial-gradient(ellipse 900px 650px at 100% 105%, ${C.accentWarm}0d, transparent 62%);
   }
 
-  ::-webkit-scrollbar{width:7px;height:7px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:${C.borderBright};border-radius:4px;border:1.5px solid ${C.bgApp};background-clip:padding-box}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-track{background:${C.bgPanel}66}
+  ::-webkit-scrollbar-thumb{background:${C.borderBright};border-radius:6px;border:2px solid ${C.bgApp};background-clip:padding-box;min-height:44px}
   ::-webkit-scrollbar-thumb:hover{background:${C.accent};background-clip:padding-box}
-  * { scrollbar-width: thin; scrollbar-color: ${C.borderBright} transparent; }
+  * { scrollbar-width: auto; scrollbar-color: ${C.borderBright} ${C.bgPanel}66; }
 
   textarea:focus,input:focus{outline:none}
   textarea:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible,[tabindex]:focus-visible{

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { RADIUS, FONT_BODY, FONT_DISPLAY, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
@@ -16,6 +16,34 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
   canUndo, canRedo, onUndo, onRedo, onFormat, onHistory, onExport,
   focusMode, onFocusMode, isMobile }) {
   const C = useTheme();
+  // Rastrea qué formato tiene el texto donde está el cursor (negrita, cursiva,
+  // título, subtítulo) para resaltar el botón correspondiente — sin esto,
+  // un botón de formato es una caja negra: no hay forma de saber si lo que
+  // estás escribiendo ya es negrita o un título hasta que lo revisás a ojo.
+  // selectionchange es global (no hace falta que el evento venga del propio
+  // contentEditable) así que esto funciona aunque Toolbar y el editor sean
+  // componentes separados.
+  const [activeBlock, setActiveBlock] = useState("P");
+  const [activeBold, setActiveBold] = useState(false);
+  const [activeItalic, setActiveItalic] = useState(false);
+
+  useEffect(() => {
+    if (isMobile || focusMode) return;
+    const update = () => {
+      try {
+        setActiveBold(document.queryCommandState("bold"));
+        setActiveItalic(document.queryCommandState("italic"));
+        const block = (document.queryCommandValue("formatBlock") || "").toUpperCase();
+        setActiveBlock(block === "H1" || block === "H2" ? block : "P");
+      } catch { /* fuera de un contexto editable, ignorar */ }
+    };
+    document.addEventListener("selectionchange", update);
+    return () => document.removeEventListener("selectionchange", update);
+  }, [isMobile, focusMode]);
+
+  // Toggle: si el bloque activo ya es el que tocaste, vuelve a texto normal.
+  const toggleBlock = (tag) => onFormat("formatBlock", activeBlock === tag ? "P" : tag);
+
   if (isMobile) return null;
 
   // En modo foco la barra se reduce a lo mínimo indispensable — título (solo
@@ -55,22 +83,21 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
 
       <div style={{width:1, height:22, background:C.border, margin:"0 8px"}}/>
 
-      <select
-        onChange={e => { if (e.target.value) { onFormat("formatBlock", e.target.value); e.target.value = ""; } }}
-        value=""
-        title="Estilo de párrafo"
-        style={{background:"none", border:`1px solid ${C.border}`, borderRadius:6,
-          color:C.textSec, fontSize:12, padding:"5px 6px", marginRight:2, cursor:"pointer", outline:"none"}}>
-        <option value="" disabled>Estilo…</option>
-        <option value="H1">Título</option>
-        <option value="H2">Subtítulo</option>
-        <option value="P">Texto normal</option>
-      </select>
+      <Btn onClick={()=>toggleBlock("H1")} title="Título" style={{padding:"5px 10px",
+        fontFamily:FONT_DISPLAY, fontWeight:700, fontSize:14,
+        color: activeBlock==="H1" ? C.accent : C.textMuted,
+        background: activeBlock==="H1" ? C.accentGlow : "none"}}>T</Btn>
+      <Btn onClick={()=>toggleBlock("H2")} title="Subtítulo" style={{padding:"5px 10px",
+        fontFamily:FONT_DISPLAY, fontStyle:"italic", fontWeight:600, fontSize:13,
+        color: activeBlock==="H2" ? C.accent : C.textMuted,
+        background: activeBlock==="H2" ? C.accentGlow : "none"}}>t</Btn>
 
       <div style={{width:1, height:22, background:C.border, margin:"0 8px"}}/>
 
-      <Btn onClick={()=>onFormat("bold")} title="Negrita (Ctrl+B)" style={{padding:"5px 7px"}}><Icons.Bold/></Btn>
-      <Btn onClick={()=>onFormat("italic")} title="Cursiva (Ctrl+I)" style={{padding:"5px 7px"}}><Icons.Italic/></Btn>
+      <Btn onClick={()=>onFormat("bold")} title="Negrita (Ctrl+B)" style={{padding:"5px 7px",
+        color: activeBold ? C.accent : undefined, background: activeBold ? C.accentGlow : "none"}}><Icons.Bold/></Btn>
+      <Btn onClick={()=>onFormat("italic")} title="Cursiva (Ctrl+I)" style={{padding:"5px 7px",
+        color: activeItalic ? C.accent : undefined, background: activeItalic ? C.accentGlow : "none"}}><Icons.Italic/></Btn>
 
       <div style={{flex:1}}/>
 
