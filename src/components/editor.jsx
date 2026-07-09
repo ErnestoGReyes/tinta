@@ -53,8 +53,16 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
   );
 }
 
-// Esta nueva función es para que ignore el formato en el que se pega el texto de origen //
-
+// El cuerpo del manuscrito: una columna centrada, ancha como una página de
+// libro (no full-width), con tipografía serif y buen interlineado — pensado
+// para escribir/leer prosa larga, no para chrome de UI.
+// Pegar texto copiado de otro lado (Word, Notion, un .txt, la web) trae
+// consigo el estilo de origen: color de letra, tipografía, tamaños, spans
+// anidados. Eso puede dejar texto invisible (ej. negro sobre nuestro fondo
+// oscuro) y confundir al cursor. Por eso interceptamos el paste, tomamos SOLO
+// el texto plano del portapapeles y reconstruimos nosotros mismos el HTML
+// (con <br> para los saltos de línea) — así lo pegado siempre hereda la
+// tipografía y el color del editor, nunca el de origen.
 function handlePaste(e) {
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData("text/plain");
@@ -66,24 +74,23 @@ function handlePaste(e) {
   document.execCommand("insertHTML", false, html);
 }
 
-
-// El cuerpo del manuscrito: una columna centrada, ancha como una página de
-// libro (no full-width), con tipografía serif y buen interlineado — pensado
-// para escribir/leer prosa larga, no para chrome de UI.
 export function ManuscriptEditor({ html, onChange, isMobile, focusMode }) {
   const C = useTheme();
   const ref = useRef(null);
-  const lastHtml = useRef(html);
 
-  // Sincroniza el contenido externo (ej. al cambiar de capítulo) sin pisar
-  // el cursor mientras el usuario tipea — solo actualiza el DOM si el html
-  // recibido cambió por una razón externa (cambio de capítulo, undo/redo),
-  // no por cada tecla.
+  // Sincroniza el contenido guardado hacia el DOM cada vez que `html` cambia
+  // por una razón externa al tipeo (montaje del capítulo, restaurar una
+  // versión, deshacer/rehacer) — comparando directamente contra lo que el
+  // DOM ya tiene, no contra un valor recordado de la última tecla. Mientras
+  // el usuario tipea, el navegador ya actualizó el DOM antes de que este
+  // efecto corra, así que `ref.current.innerHTML` y `html` ya coinciden y no
+  // se pisa el cursor. La versión anterior comparaba contra una referencia
+  // que arrancaba igual al valor inicial, así que al abrir un capítulo con
+  // contenido guardado nunca llegaba a pintarlo en pantalla.
   useEffect(() => {
-    if (ref.current && html !== lastHtml.current && ref.current.innerHTML !== html) {
+    if (ref.current && ref.current.innerHTML !== (html || "")) {
       ref.current.innerHTML = html || "";
     }
-    lastHtml.current = html;
   }, [html]);
 
   return (
@@ -96,7 +103,8 @@ export function ManuscriptEditor({ html, onChange, isMobile, focusMode }) {
           ref={ref}
           contentEditable
           suppressContentEditableWarning
-          onInput={e => { lastHtml.current = e.currentTarget.innerHTML; onChange(e.currentTarget.innerHTML); }}
+          onInput={e => onChange(e.currentTarget.innerHTML)}
+          onPaste={handlePaste}
           data-placeholder="Había una vez…"
           style={{
             outline:"none", fontFamily:FONT_BODY, fontSize: isMobile ? 17 : 18,
