@@ -5,6 +5,7 @@ import { Icons } from "../lib/icons";
 import { Modal, Btn } from "./common";
 import { supabase } from "../lib/supabase";
 import { formatRelativeDate, countWords } from "../utils/literary";
+import { exportBookToPDF, pdfPageSizeOptions } from "../utils/pdfExport";
 
 export function NewBookModal({ open, onClose, onCreate }) {
   const C = useTheme();
@@ -94,12 +95,16 @@ export function ChapterVersionsModal({ open, onClose, chapterId, onRestore }) {
 }
 
 // Export simple, sin dependencias nuevas: genera un .md o .txt en el cliente.
-// Un export a PDF "de verdad" (tipografía de imprenta, numeración, tapa) es un
-// paso natural siguiente — se podría armar con una librería como jsPDF o
-// mandando el HTML a una función de servidor que use Puppeteer.
+// El PDF "de verdad" (tipografía de imprenta, portada, índice, numeración de
+// página vía el propio motor de impresión del navegador) vive en
+// utils/pdfExport.js — ver ese archivo para el porqué de ese enfoque.
 export function ExportModal({ open, onClose, book, chapters }) {
   const C = useTheme();
   const [format, setFormat] = useState("md");
+  const [author, setAuthor] = useState("");
+  const [includeTOC, setIncludeTOC] = useState(true);
+  const [pageSize, setPageSize] = useState("book");
+  const [generating, setGenerating] = useState(false);
 
   const buildText = () => {
     const parts = [`# ${book?.title || "Sin título"}`, ""];
@@ -125,26 +130,21 @@ export function ExportModal({ open, onClose, book, chapters }) {
     onClose();
   };
 
-  const printPdf = () => {
-    const w = window.open("", "_blank");
-    const body = chapters.map((ch, i) =>
-      `<h2>${i+1}. ${ch.title || "Sin título"}</h2>${ch.content || ""}`
-    ).join("<hr/>");
-    w.document.write(`<html><head><title>${book?.title || "Libro"}</title>
-      <style>
-        body{font-family:Georgia,serif;max-width:640px;margin:40px auto;line-height:1.7;color:#1a1510}
-        h1{font-family:Georgia,serif} h2{margin-top:2.5em;font-size:1.3em} hr{border:none;border-top:1px solid #ddd;margin:2em 0}
-      </style></head><body><h1>${book?.title || ""}</h1>${body}</body></html>`);
-    w.document.close();
-    w.focus();
-    w.print();
+  const generatePdf = async () => {
+    setGenerating(true);
+    try {
+      await exportBookToPDF(book, chapters, { author: author.trim(), includeTOC, pageSize });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Exportar libro" width={400}>
+    <Modal open={open} onClose={onClose} title="Exportar libro" width={420}>
       <div style={{fontSize:12.5, color:C.textMuted, marginBottom:14, lineHeight:1.6}}>
         Exportá {chapters.length} capítulo{chapters.length===1?"":"s"} de "{book?.title}".
       </div>
+
       <div style={{display:"flex", gap:6, marginBottom:16}}>
         {[{id:"md",label:"Markdown (.md)"},{id:"txt",label:"Texto plano (.txt)"}].map(f => (
           <button key={f.id} onClick={()=>setFormat(f.id)} style={{
@@ -156,12 +156,45 @@ export function ExportModal({ open, onClose, book, chapters }) {
           </button>
         ))}
       </div>
-      <Btn variant="primary" onClick={download} style={{width:"100%", justifyContent:"center", marginBottom:8}}>
-        <Icons.Export style={{width:14,height:14}}/> Descargar
+      <Btn variant="primary" onClick={download} style={{width:"100%", justifyContent:"center", marginBottom:20}}>
+        <Icons.Export style={{width:14,height:14}}/> Descargar {format}
       </Btn>
-      <Btn variant="outline" onClick={printPdf} style={{width:"100%", justifyContent:"center"}}>
-        <Icons.PDF style={{width:14,height:14}}/> Imprimir / Guardar como PDF
+
+      <div style={{height:1, background:C.border, margin:"0 0 16px"}}/>
+
+      <div style={{fontSize:11, color:C.textMuted, textTransform:"uppercase", letterSpacing:.4, marginBottom:10}}>
+        PDF con formato de libro
+      </div>
+
+      <input value={author} onChange={e=>setAuthor(e.target.value)} placeholder="Nombre del autor (opcional)"
+        style={{width:"100%", background:C.bgCard, border:`1px solid ${C.border}`,
+          borderRadius:RADIUS.sm, padding:"9px 12px", color:C.textPrimary, fontSize:13,
+          outline:"none", marginBottom:10, boxSizing:"border-box"}}/>
+
+      <div style={{display:"flex", gap:6, marginBottom:10}}>
+        {pdfPageSizeOptions().map(p => (
+          <button key={p.id} onClick={()=>setPageSize(p.id)} style={{
+            flex:1, padding:"7px 8px", borderRadius:RADIUS.sm, fontSize:11.5,
+            background:pageSize===p.id?C.accentGlow:"none",
+            border:`1px solid ${pageSize===p.id?C.accent:C.border}`,
+            color:pageSize===p.id?C.accent:C.textMuted, cursor:"pointer", fontFamily:"inherit"}}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <label style={{display:"flex", alignItems:"center", gap:8, marginBottom:16, cursor:"pointer"}}>
+        <input type="checkbox" checked={includeTOC} onChange={e=>setIncludeTOC(e.target.checked)}
+          style={{width:14, height:14, accentColor:C.accent, cursor:"pointer"}}/>
+        <span style={{fontSize:12.5, color:C.textSec}}>Incluir índice</span>
+      </label>
+
+      <Btn variant="outline" onClick={generatePdf} disabled={generating} style={{width:"100%", justifyContent:"center"}}>
+        <Icons.PDF style={{width:14,height:14}}/> {generating ? "Generando…" : "Generar PDF"}
       </Btn>
+      <div style={{fontSize:10.5, color:C.textFaint, marginTop:8, lineHeight:1.5}}>
+        Se abre en una pestaña nueva con el diálogo de impresión — elegí "Guardar como PDF" como destino.
+      </div>
     </Modal>
   );
 }

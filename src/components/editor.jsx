@@ -145,6 +145,17 @@ export function ManuscriptEditor({ html, onChange, isMobile, focusMode, onFocusM
   const C = useTheme();
   const ref = useRef(null);
 
+  // Sin esto, Chrome envuelve cada línea en <div> al tipear Enter, Firefox
+  // usa <br> sueltos y Safari varía — el HTML guardado queda inconsistente
+  // entre navegadores, lo que complica tanto los estilos de exportación
+  // (justificado, sangría de primera línea) como cualquier futuro parseo del
+  // contenido. Forzamos <p> como separador en todos lados donde el navegador
+  // lo permite (soporte amplio en Chrome/Firefox, parcial en Safari — ahí
+  // simplemente no tiene efecto y sigue con su comportamiento default).
+  useEffect(() => {
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch {}
+  }, []);
+
   // Salir del modo foco con Escape, como en cualquier app de escritura seria.
   useEffect(() => {
     if (!focusMode || !onFocusMode) return;
