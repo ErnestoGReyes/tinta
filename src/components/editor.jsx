@@ -53,6 +53,20 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
   );
 }
 
+// Esta nueva función es para que ignore el formato en el que se pega el texto de origen //
+
+function handlePaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const html = escaped.split(/\r\n|\r|\n/).join("<br>");
+  document.execCommand("insertHTML", false, html);
+}
+
+
 // El cuerpo del manuscrito: una columna centrada, ancha como una página de
 // libro (no full-width), con tipografía serif y buen interlineado — pensado
 // para escribir/leer prosa larga, no para chrome de UI.

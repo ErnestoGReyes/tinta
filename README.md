@@ -20,8 +20,8 @@ npm install
 
 1. Entrá a [supabase.com](https://supabase.com) → **New project**.
 2. Cuando esté listo, andá a **Project Settings → API** y copiá:
-   - `Project URL`
-   - `anon public` key
+   - `Project URL` https://ghprksnoarrvwtlvkauw.supabase.co
+   - `anon public` key eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdocHJrc25vYXJydnd0bHZrYXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MTEwMDQsImV4cCI6MjA5OTE4NzAwNH0.4TjBKyLoJIE0sk_j-dlFKwa9Wi8ymUgNurhhB59hi8w
 3. Andá a **Authentication → Providers** y asegurate de que **Email** esté habilitado
    (viene activado por defecto). Si no querés confirmación por email mientras
    probás, en **Authentication → Settings** podés desactivar "Confirm email".
