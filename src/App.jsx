@@ -123,7 +123,7 @@ function ChapterEditorPane({ chapter, bookTitle, isMobile, focusMode, onFocusMod
           onFormat={applyFormat} onHistory={onHistory} onExport={onExport}
           focusMode={focusMode} onFocusMode={onFocusMode} isMobile={false}/>
       )}
-      <ManuscriptEditor html={content} onChange={setContent} isMobile={isMobile} focusMode={focusMode}/>
+      <ManuscriptEditor html={content} onChange={setContent} isMobile={isMobile} focusMode={focusMode} onFocusMode={onFocusMode}/>
       {!isMobile && (
         <div style={{padding:"6px 16px", fontSize:10.5, color:C.textFaint, borderTop:`1px solid ${C.border}`, flexShrink:0}}>
           {words} palabras · ~{pages} páginas
@@ -347,11 +347,13 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
       }
       return (
         <div style={{display:"flex", flex:1, minWidth:0}}>
-          <div style={{width:230, borderRight:`1px solid ${C.border}`, overflowY:"auto", flexShrink:0}}>
-            <ChaptersPanel chapters={chapters} activeId={selectedChapterId}
-              onSelect={setSelectedChapterId} onCreate={createChapter} onRename={renameChapter}
-              onDelete={deleteChapter} onReorder={reorderChapters}/>
-          </div>
+          {!focusMode && (
+            <div style={{width:230, borderRight:`1px solid ${C.border}`, overflowY:"auto", flexShrink:0}}>
+              <ChaptersPanel chapters={chapters} activeId={selectedChapterId}
+                onSelect={setSelectedChapterId} onCreate={createChapter} onRename={renameChapter}
+                onDelete={deleteChapter} onReorder={reorderChapters}/>
+            </div>
+          )}
           {selectedChapter
             ? <ChapterEditorPane key={selectedChapter.id+":"+versionKey} chapter={selectedChapter}
                 bookTitle={selectedBook?.title} isMobile={false} focusMode={focusMode}
@@ -372,13 +374,21 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
     return null;
   };
 
+  // El modo foco esconde toda la UI que no sea el manuscrito en sí: nav
+  // lateral (desktop) y barra inferior (mobile). El panel de capítulos ya se
+  // esconde más arriba, dentro de renderMain(). Antes ninguna de estas tres
+  // piezas reaccionaba a `focusMode`, así que activar el modo foco apenas
+  // angostaba unos px la columna de texto — el resto de la pantalla no
+  // cambiaba y por eso el toggle parecía no hacer nada.
+  const chromeVisible = !focusMode || tab !== "editor";
+
   return (
     <div style={{display:"flex", height:"100dvh", overflow:"hidden"}}>
-      {!isMobile && <NavSidebar {...navProps} saving={false} saveError={false}/>}
+      {!isMobile && chromeVisible && <NavSidebar {...navProps} saving={false} saveError={false}/>}
       <div style={{flex:1, display:"flex", flexDirection:"column", minWidth:0}}>
         {renderMain()}
       </div>
-      {isMobile && <MobileBottomNav tab={tab} onTab={setTab} isDark={isDark}
+      {isMobile && chromeVisible && <MobileBottomNav tab={tab} onTab={setTab} isDark={isDark}
         onOpenThemeSelector={()=>setShowThemeSelector(true)} onHelp={()=>setShowHelp(true)}/>}
 
       <NewBookModal open={showNewBook} onClose={()=>setShowNewBook(false)} onCreate={createBook}/>

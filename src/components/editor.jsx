@@ -18,6 +18,32 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
   const C = useTheme();
   if (isMobile) return null;
 
+  // En modo foco la barra se reduce a lo mínimo indispensable — título (solo
+  // lectura), estado de guardado y el botón para salir. Formato, deshacer,
+  // historial y exportar se esconden. Antes esto no existía: la barra
+  // quedaba igual de completa estuviera activado o no el modo foco, y eso
+  // sumado a que el sidebar de capítulos y el nav tampoco se ocultaban
+  // (ver App.jsx) hacía que el toggle pareciera no tener ningún efecto real.
+  if (focusMode) {
+    return (
+      <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
+        padding:"0 16px", display:"flex", alignItems:"center", gap:8, flexShrink:0, height:44}}>
+        <span style={{fontFamily:FONT_DISPLAY, fontSize:13, fontWeight:600, color:C.textMuted,
+          flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
+          {chapterTitle || "Sin título"}
+        </span>
+        {saveError
+          ? <span style={{display:"flex",alignItems:"center",gap:4,fontSize:10.5, color:C.red}}>
+              <Icons.Saving/> Sin conexión
+            </span>
+          : saving && <span className="saving" style={{display:"flex",alignItems:"center",gap:4,fontSize:10.5, color:C.textMuted}}>
+              <Icons.Saving/> Guardando
+            </span>}
+        <Btn onClick={onFocusMode} title="Salir del modo foco (Esc)" style={{padding:"5px 7px", color:C.accent}}><Icons.Focus/></Btn>
+      </div>
+    );
+  }
+
   return (
     <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
       padding:"0 16px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:50}}>
@@ -26,6 +52,20 @@ export function Toolbar({ chapterTitle, onTitleChange, saving, saveError,
         style={{background:"none", border:"none", outline:"none", color:C.textPrimary,
           fontFamily:FONT_DISPLAY, fontSize:17, fontWeight:600, flex:1, minWidth:0,
           maxWidth:320}}/>
+
+      <div style={{width:1, height:22, background:C.border, margin:"0 8px"}}/>
+
+      <select
+        onChange={e => { if (e.target.value) { onFormat("formatBlock", e.target.value); e.target.value = ""; } }}
+        value=""
+        title="Estilo de párrafo"
+        style={{background:"none", border:`1px solid ${C.border}`, borderRadius:6,
+          color:C.textSec, fontSize:12, padding:"5px 6px", marginRight:2, cursor:"pointer", outline:"none"}}>
+        <option value="" disabled>Estilo…</option>
+        <option value="H1">Título</option>
+        <option value="H2">Subtítulo</option>
+        <option value="P">Texto normal</option>
+      </select>
 
       <div style={{width:1, height:22, background:C.border, margin:"0 8px"}}/>
 
@@ -74,9 +114,17 @@ function handlePaste(e) {
   document.execCommand("insertHTML", false, html);
 }
 
-export function ManuscriptEditor({ html, onChange, isMobile, focusMode }) {
+export function ManuscriptEditor({ html, onChange, isMobile, focusMode, onFocusMode }) {
   const C = useTheme();
   const ref = useRef(null);
+
+  // Salir del modo foco con Escape, como en cualquier app de escritura seria.
+  useEffect(() => {
+    if (!focusMode || !onFocusMode) return;
+    const h = (e) => { if (e.key === "Escape") onFocusMode(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [focusMode, onFocusMode]);
 
   // Sincroniza el contenido guardado hacia el DOM cada vez que `html` cambia
   // por una razón externa al tipeo (montaje del capítulo, restaurar una
@@ -118,11 +166,20 @@ export function ManuscriptEditor({ html, onChange, isMobile, focusMode }) {
           content: attr(data-placeholder);
           color: ${C.textFaint};
         }
+        [contenteditable] h1{
+          font-family:${FONT_DISPLAY}; font-size:1.7em; font-weight:600;
+          line-height:1.25; margin:0.9em 0 0.35em; color:${C.textPrimary};
+        }
+        [contenteditable] h2{
+          font-family:${FONT_DISPLAY}; font-size:1.25em; font-weight:600;
+          font-style:italic; line-height:1.35; margin:0.7em 0 0.3em; color:${C.textSec};
+        }
+        [contenteditable] p{ margin:0 0 0.2em; }
       `}</style>
     </div>
   );
 }
 
-export function applyFormat(command) {
-  document.execCommand(command, false, null);
+export function applyFormat(command, value = null) {
+  document.execCommand(command, false, value);
 }
