@@ -169,7 +169,7 @@ export function ManuscriptEditor({ html, onChange, isMobile, focusMode, onFocusM
   }, [html]);
 
   return (
-    <div style={{flex:1, overflowY:"auto", background:C.bgEditor}}>
+    <div style={{flex:1, minHeight:0, overflowY:"auto", background:C.bgEditor}}>
       <div style={{
         maxWidth: focusMode ? 640 : 720, margin:"0 auto",
         padding: isMobile ? "24px 20px 80px" : "48px 40px 120px",

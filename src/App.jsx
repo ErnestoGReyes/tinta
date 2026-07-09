@@ -346,7 +346,7 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
           : <EmptyEditorState onCreate={createChapter}/>;
       }
       return (
-        <div style={{display:"flex", flex:1, minWidth:0}}>
+        <div style={{display:"flex", flex:1, minWidth:0, minHeight:0}}>
           {!focusMode && (
             <div style={{width:230, borderRight:`1px solid ${C.border}`, overflowY:"auto", flexShrink:0}}>
               <ChaptersPanel chapters={chapters} activeId={selectedChapterId}
@@ -385,7 +385,7 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
   return (
     <div style={{display:"flex", height:"100dvh", overflow:"hidden"}}>
       {!isMobile && chromeVisible && <NavSidebar {...navProps} saving={false} saveError={false}/>}
-      <div style={{flex:1, display:"flex", flexDirection:"column", minWidth:0}}>
+      <div style={{flex:1, display:"flex", flexDirection:"column", minWidth:0, minHeight:0}}>
         {renderMain()}
       </div>
       {isMobile && chromeVisible && <MobileBottomNav tab={tab} onTab={setTab} isDark={isDark}
