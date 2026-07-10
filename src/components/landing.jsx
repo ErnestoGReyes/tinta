@@ -123,7 +123,7 @@ export function AuthScreen({ isDark, onToggleTheme }) {
   );
 }
 
-export function WelcomeScreen({ onCreateBook }) {
+export function WelcomeScreen({ onCreateBook, onImportClick }) {
   const C = useTheme();
   const [name, setName] = useState("");
   const [type, setType] = useState("novela");
@@ -167,6 +167,13 @@ export function WelcomeScreen({ onCreateBook }) {
             fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8}}>
           <Icons.Plus style={{width:16,height:16}}/> Crear libro
         </button>
+        {onImportClick && (
+          <button onClick={onImportClick} style={{width:"100%", marginTop:14, background:"none",
+            border:"none", color:C.textMuted, fontSize:12.5, cursor:"pointer", textAlign:"center",
+            fontFamily:"inherit"}}>
+            ¿Ya tenés algo escrito? Importar desde .txt o .md
+          </button>
+        )}
       </div>
     </div>
   );

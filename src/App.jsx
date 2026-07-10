@@ -14,7 +14,7 @@ import { NavSidebar, MobileBottomNav, MobileEditorHeader } from "./components/na
 import { LandingPage, AuthScreen, WelcomeScreen } from "./components/landing";
 import { Toolbar, ManuscriptEditor, applyFormat } from "./components/editor";
 import { ChaptersPanel, CharactersPanel, TimelinePanel, NotesPanel, GoalsPanel, WorldPanel } from "./components/panels";
-import { NewBookModal, ChapterVersionsModal, ExportModal } from "./components/modals";
+import { NewBookModal, ChapterVersionsModal, ExportModal, ImportBookModal } from "./components/modals";
 import { uid, countWords, estimatePages, excerpt } from "./utils/literary";
 
 function useIsMobile() {
@@ -133,13 +133,18 @@ function ChapterEditorPane({ chapter, bookTitle, isMobile, focusMode, onFocusMod
   );
 }
 
-function BooksScreen({ books, selectedBookId, onSelect, onDelete, onNew }) {
+function BooksScreen({ books, selectedBookId, onSelect, onDelete, onNew, onImport }) {
   const C = useTheme();
   return (
     <PanelShell title="Tus libros" icon={Icons.Books}>
-      <Btn variant="primary" onClick={onNew} style={{marginBottom:16}}>
-        <Icons.Plus style={{width:14, height:14}}/> Nuevo libro
-      </Btn>
+      <div style={{display:"flex", gap:8, marginBottom:16}}>
+        <Btn variant="primary" onClick={onNew} style={{flex:1, justifyContent:"center"}}>
+          <Icons.Plus style={{width:14, height:14}}/> Nuevo libro
+        </Btn>
+        <Btn variant="outline" onClick={onImport} style={{flex:1, justifyContent:"center"}}>
+          <Icons.Export style={{width:14, height:14, transform:"rotate(180deg)"}}/> Importar archivo
+        </Btn>
+      </div>
       <div style={{display:"flex", flexDirection:"column", gap:8}}>
         {books.map(b => (
           <div key={b.id} onClick={()=>onSelect(b.id)} style={{
@@ -210,6 +215,7 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
   const [versionKey, setVersionKey] = useState(0);
 
   const [showNewBook, setShowNewBook] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showExport, setShowExport] = useState(false);
@@ -250,6 +256,29 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
     if (error) { alert(error.message); return; }
     await loadBooks();
     setSelectedBookId(id);
+    setTab("editor");
+  };
+
+  // Crea el libro y, de una, todos los capítulos que trajo el parser de
+  // importación (utils/importText.js) — un solo insert masivo en vez de uno
+  // por capítulo, para no hacer N round-trips a Supabase si el archivo tiene
+  // muchos capítulos.
+  const importBook = async (title, type, parsedChapters) => {
+    const bookId = uid();
+    const now = new Date().toISOString();
+    const { error: bookError } = await supabase.from("books")
+      .insert({ id: bookId, user_id: userId, title, type, created_at: now });
+    if (bookError) { alert(bookError.message); return; }
+
+    const rows = parsedChapters.map((ch, i) => ({
+      id: uid(), book_id: bookId, title: ch.title || `Capítulo ${i+1}`,
+      content: ch.html || "", order_index: i, created_at: now, updated_at: now,
+    }));
+    const { error: chaptersError } = await supabase.from("chapters").insert(rows);
+    if (chaptersError) { alert(chaptersError.message); return; }
+
+    await loadBooks();
+    setSelectedBookId(bookId);
     setTab("editor");
   };
 
@@ -315,10 +344,11 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
     return (
       <div style={{display:"flex", height:"100dvh"}}>
         {!isMobile && <NavSidebar {...navProps} saving={false} saveError={false}/>}
-        <WelcomeScreen onCreateBook={createBook}/>
+        <WelcomeScreen onCreateBook={createBook} onImportClick={()=>setShowImport(true)}/>
         <ThemeSelectorModal open={showThemeSelector} onClose={()=>setShowThemeSelector(false)}
           themeId={themeId} onSelectTheme={setThemeId} isDark={isDark} onToggleMode={toggleTheme}/>
         <HelpModal open={showHelp} onClose={()=>setShowHelp(false)}/>
+        <ImportBookModal open={showImport} onClose={()=>setShowImport(false)} onImport={importBook}/>
       </div>
     );
   }
@@ -370,7 +400,8 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
     if (tab === "goals") return <PanelShell title="Objetivos" icon={Icons.Goal}><GoalsPanel bookId={selectedBookId}/></PanelShell>;
     if (tab === "search") return <SearchScreen chapters={chapters} onOpenChapter={id=>{ setSelectedChapterId(id); setTab("editor"); }}/>;
     if (tab === "books") return <BooksScreen books={books} selectedBookId={selectedBookId}
-      onSelect={id=>{ setSelectedBookId(id); setTab("editor"); }} onDelete={deleteBook} onNew={()=>setShowNewBook(true)}/>;
+      onSelect={id=>{ setSelectedBookId(id); setTab("editor"); }} onDelete={deleteBook}
+      onNew={()=>setShowNewBook(true)} onImport={()=>setShowImport(true)}/>;
     return null;
   };
 
@@ -392,6 +423,7 @@ function MainApp({ session, isDark, themeId, setThemeId, toggleTheme }) {
         onOpenThemeSelector={()=>setShowThemeSelector(true)} onHelp={()=>setShowHelp(true)}/>}
 
       <NewBookModal open={showNewBook} onClose={()=>setShowNewBook(false)} onCreate={createBook}/>
+      <ImportBookModal open={showImport} onClose={()=>setShowImport(false)} onImport={importBook}/>
       <ThemeSelectorModal open={showThemeSelector} onClose={()=>setShowThemeSelector(false)}
         themeId={themeId} onSelectTheme={setThemeId} isDark={isDark} onToggleMode={toggleTheme}/>
       <ChapterVersionsModal open={showHistory} onClose={()=>setShowHistory(false)}
